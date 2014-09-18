@@ -1,0 +1,90 @@
+<?php
+
+/**
+ * @file
+ * Main file of Field Split module.
+ */
+
+/**
+ * Implements hook_field_formatter_info_alter().
+ */
+function field_split_field_formatter_info_alter(&$infos) {
+  foreach ($infos as &$info) {
+    // Add a settings array if no settings were found.
+    if (!isset($info['settings']) || !is_array($info['settings'])) {
+      $info['settings'] = array();
+    }
+
+    $info['settings'] += array(
+      'field_split' => array(
+        'split' => 0,
+        'values' => 0,
+      ),
+    );
+  }
+}
+
+/**
+ * Implements hook_field_formatter_settings_summary_alter().
+ */
+function field_split_field_formatter_settings_summary_alter(&$summary, $context) {
+  $display = $context['instance']['display'][$context['view_mode']];
+  $settings = $display['settings'];
+
+  if (!isset($settings['field_split'])) {
+    // We have to put something in the summary so that we can ever
+    // set Field Split settings.
+    $summary .= ' ';
+    return;
+  }
+
+  // Normalize the settings.
+  $split = $settings['field_split']['split'];
+  $values = $settings['field_split']['values'];
+
+  if ($split) {
+    $summary = t('Will be split into @values fields', array('@values' => $values));
+  }
+  else {
+    $summary .= ' ';
+  }
+}
+
+/**
+ * Implements hook_field_formatter_settings_form_alter().
+ */
+function field_split_field_formatter_settings_form_alter(&$settings_form, $context) {
+  $field = $context['field'];
+  $display = $context['instance']['display'][$context['view_mode']];
+  $settings = $display['settings'];
+
+  if ($field['cardinality'] == 1) {
+    return;
+  }
+
+  $settings_form['field_split']['split'] = array(
+    '#title' => t('Split this field'),
+    '#type' => 'checkbox',
+    '#default_value' => $settings['field_split']['split'],
+  );
+
+  $options = array();
+
+  // Build a list with available values.
+  foreach(range(2, $field['cardinality'] + 1) as $number) {
+    $options[$number - 1] = $number;
+  }
+
+  $settings_form['field_split']['values'] = array(
+    '#title' => t('Values'),
+    '#type' => 'select',
+    '#options' => $options,
+    '#default_value' => $settings['field_split']['values'],
+    '#description' => t('Select the amount of fields in total.'),
+    '#states' => array(
+      'visible' => array(
+        'input[name$="[settings][field_split][split]"]' => array('checked' => TRUE),
+      ),
+    ),
+  );
+}
