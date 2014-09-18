@@ -95,6 +95,7 @@ function field_split_config_form($form, $form_state) {
  */
 function field_split_config_form_submit($form, &$form_state) {
   variable_set('field_split_config', $form_state['values']['entity_types']);
+  field_cache_clear();
 
   drupal_set_message(t('The configuration options have been saved.'));
 }
