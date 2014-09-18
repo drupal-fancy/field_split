@@ -6,164 +6,115 @@
  */
 
 /**
- * Implements hook_field_formatter_info_alter().
+ * Implements hook_help().
  */
-function field_split_field_formatter_info_alter(&$infos) {
-  foreach ($infos as &$info) {
-    // Add a settings array if no settings were found.
-    if (!isset($info['settings']) || !is_array($info['settings'])) {
-      $info['settings'] = array();
-    }
-
-    $info['settings'] += array(
-      'field_split' => array(
-        'split' => 0,
-        'values' => 0,
-      ),
-    );
+function field_split_help($path, $arg) {
+  switch ($path) {
+    case 'admin/structure/field-split':
+      return '<p>' . t('This is the configuration form for Field Split module. Just open the specific fieldsets, enable the split functionality and select the amount of total fields.') . '</p>';
   }
 }
 
-/**
- * Implements hook_field_formatter_settings_summary_alter().
- */
-function field_split_field_formatter_settings_summary_alter(&$summary, $context) {
-  $display = $context['instance']['display'][$context['view_mode']];
-  $settings = $display['settings'];
-
-  if (!isset($settings['field_split'])) {
-    // We have to put something in the summary so that we can ever
-    // set Field Split settings.
-    $summary .= ' ';
-    return;
-  }
-
-  // Normalize the settings.
-  $split = $settings['field_split']['split'];
-  $values = $settings['field_split']['values'];
-
-  if ($split) {
-    $summary = t('Will be split into @values fields', array('@values' => $values));
-  }
-  else {
-    $summary .= ' ';
-  }
-}
 
 /**
- * Implements hook_field_formatter_settings_form_alter().
+ * Implements hook_menu().
  */
-function field_split_field_formatter_settings_form_alter(&$settings_form, $context) {
-  $field = $context['field'];
-  $display = $context['instance']['display'][$context['view_mode']];
-  $settings = $display['settings'];
+function field_split_menu() {
+  $items = array();
 
-  if ($field['cardinality'] == 1) {
-    return;
-  }
-
-  $settings_form['field_split']['split'] = array(
-    '#title' => t('Split this field'),
-    '#type' => 'checkbox',
-    '#default_value' => $settings['field_split']['split'],
+  $items['admin/structure/field-split'] = array(
+    'title' => 'Field Split',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('field_split_config_form'),
+    'type' => MENU_NORMAL_ITEM,
+    'access arguments' => array('administer site configuration'),
+    'file' => 'field_split.admin.inc',
   );
 
-  $options = array();
-
-  // Build a list with available values.
-  foreach(range(2, $field['cardinality'] + 1) as $number) {
-    $options[$number - 1] = $number;
-  }
-
-  $settings_form['field_split']['values'] = array(
-    '#title' => t('Values'),
-    '#type' => 'select',
-    '#options' => $options,
-    '#default_value' => $settings['field_split']['values'],
-    '#description' => t('Select the amount of fields in total.'),
-    '#states' => array(
-      'visible' => array(
-        'input[name$="[settings][field_split][split]"]' => array('checked' => TRUE),
-      ),
-    ),
-  );
+  return $items;
 }
 
 /**
  * Implements hook_field_extra_fields().
  */
 function field_split_field_extra_fields() {
-  $extra['node']['container'] = array(
-    'display' => array(
-      'time' => array(
-        'label' => t('Last updated date'),
-        'description' => t('Display the date the article was last updated.'),
-        'weight' => 99,
-      ),
-      'created' => array(
-        'label' => t('Created date'),
-        'description' => t('Display the date the article was created.'),
-        'weight' => 100,
-        'visible' => FALSE,
-      ),
-    ),
-  );
+  $extra = array();
+  $settings = variable_get('field_split_config', array());
+
+  // Iterate all settings and create extra fields.
+  foreach ($settings as $entity_type => $bundles) {
+    foreach ($bundles as $bundle => $fields) {
+      foreach ($fields as $field_name => $field_settings) {
+        if ($field_settings['enable']) {
+          $field_info = field_info_instance($entity_type, $field_name, $bundle);
+          $field_label = $field_info['label'];
+
+          for ($i = 1; $i < $field_settings['values']; $i++) {
+            $extra[$entity_type][$bundle]['display'][$field_name . '_' . $i] = array(
+              'label' => $field_label . ' #' . ($i + 1),
+              'weight' => $i + 20,
+              'type' => 'hidden',
+            );
+          }
+        }
+      }
+    }
+  }
+
   return $extra;
 }
 
 /**
- * Implements hook_form_field_ui_display_overview_form_alter().
+ * Implements hook_entity_view().
  */
-function field_split_form_field_ui_display_overview_form_alter(&$form, &$form_state) {
-  $extra = field_split_field_extra_fields();
-  if (!isset($extra[$form['#entity_type']], $extra[$form['#entity_type']][$form['#bundle']])) {
+function field_split_entity_view($entity, $type, $view_mode, $langcode) {
+  list(, , $bundle) = entity_extract_ids($type, $entity);
+  $field_split_settings = variable_get('field_split_config', array());
+  $extra_fields = field_extra_fields_get_display($type, $bundle, $view_mode);
+
+  // Skip this entity if there are no field split settings.
+  if (!isset($field_split_settings[$type][$bundle])) {
     return;
   }
 
-  $extra_fields = array_keys($extra[$form['#entity_type']][$form['#bundle']]['display']);
-  $extra_fields = array_intersect($extra_fields, $form['#extra']);
+  // Iterate all fields inside the bundle.
+  foreach ($field_split_settings[$type][$bundle] as $field_name => $split_settings) {
+    // If the main field is not available in this entity, continue,
+    if (!isset($entity->{$field_name})) {
+      continue;
+    }
 
-  if (empty($extra_fields)) {
-    return;
-  }
+    $enabled = $split_settings['enable'];
+    $values = $split_settings['values'];
 
-  // Get list of all available date formats.
-  $formats = array();
-  drupal_static_reset('system_get_date_formats');
-  $date_formats = system_get_date_formats(); // Call this to rebuild the list, and to have default list.
-  foreach ($date_formats as $type => $format_info) {
-    $formats = array_merge($formats, $format_info);
-  }
-  $custom_formats = system_get_date_formats('custom');
-  if (!empty($custom_formats)) {
-    $formats = array_merge($formats, $custom_formats);
-  }
-  $choices = array();
-  foreach ($formats as $f => $format) {
-    $choices[$f] = format_date(REQUEST_TIME, 'custom', $f);
-  }
+    if ($enabled) {
+      for ($i = 1; $i < $values; $i++) {
+        $extra_field_name = $field_name . '_' . $i;
 
-  foreach ($extra_fields as $field_name) {
-    $form['fields'][$field_name]['settings_edit'] = array(
-      '#type' => 'select',
-      '#options' => $choices,
-      '#default_value' => variable_get('example_' . $field_name . '_format_' . $form['#entity_type'] . '_' . $form['#bundle'] . '_' . $form['#view_mode'], 'g:iA'),
-    );
-    $form['fields'][$field_name]['settings_summary']['#markup'] = '<div class="field-formatter-summary">Date format</div>';
-  }
-  $form['#submit'][] = 'field_split_extra_field_date_format_submit';
-}
+        if (isset($extra_fields[$extra_field_name]) && isset($extra_fields[$extra_field_name]['visible']) && $extra_fields[$extra_field_name]['visible']) {
+          $entity->content[$extra_field_name] = $entity->content[$field_name];
 
-/**
- * Save the view mode settings for time format.
- */
-function field_split_extra_field_date_format_submit(&$form, &$form_state) {
-  $extra = example_field_extra_fields();
-  $extra_fields = array_keys($extra[$form['#entity_type']][$form['#bundle']]['display']);
+          // Remove unnecessary values from render array.
+          foreach(element_children($entity->content[$extra_field_name]) as $key) {
+            if ($key != $i) {
+              unset($entity->content[$extra_field_name][$key]);
+            }
+          }
 
-  foreach ($extra_fields as $field_name) {
-    if (!empty($form_state['values']['fields'][$field_name]['settings_edit'])) {
-      variable_set('example_' . $field_name . '_format_' . $form['#entity_type'] . '_' . $form['#bundle'] . '_' . $form['#view_mode'], $form_state['values']['fields'][$field_name]['settings_edit']);
+          // Move field value to '0' key.
+          if ($i != 0) {
+            $entity->content[$extra_field_name][0] = $entity->content[$extra_field_name][$i];
+            unset($entity->content[$extra_field_name][$i]);
+          }
+        }
+      }
+
+      // Finally remove all unnecessary field values in the main field.
+      foreach (element_children($entity->content[$field_name]) as $key) {
+        if ($key != 0) {
+          unset($entity->content[$field_name][$key]);
+        }
+      }
     }
   }
 }

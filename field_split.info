@@ -1,5 +1,3 @@
 name = Field Split
-description = Allows you to split a field value into multiple fields
+description = Allows you to split a field value into multiple fields.
 core = 7.x
-
-dependencies[] = field_formatter_settings
