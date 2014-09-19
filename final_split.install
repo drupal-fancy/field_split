@@ -1,0 +1,13 @@
+<?php
+
+/**
+ * @file
+ * Contains install and update functions for Field Split.
+ */
+
+/**
+ * Implements hook_uninstall().
+ */
+function field_split_uninstall() {
+  variable_del('field_split_config');
+}
