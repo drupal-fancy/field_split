@@ -80,7 +80,7 @@ function field_split_entity_view($entity, $type, $view_mode, $langcode) {
   // Iterate all fields inside the bundle.
   foreach ($field_split_settings[$type][$bundle] as $field_name => $split_settings) {
     // If the main field is not available in this entity, continue,
-    if (!isset($entity->{$field_name})) {
+    if (!isset($entity->{$field_name}) || (isset($entity->{$field_name}) && !count($entity->{$field_name}))) {
       continue;
     }
 
@@ -91,7 +91,7 @@ function field_split_entity_view($entity, $type, $view_mode, $langcode) {
       for ($i = 1; $i < $values; $i++) {
         $extra_field_name = $field_name . '_' . $i;
 
-        if (isset($extra_fields[$extra_field_name]) && isset($extra_fields[$extra_field_name]['visible']) && $extra_fields[$extra_field_name]['visible']) {
+        if (isset($extra_fields[$field_name]) && isset($extra_fields[$field_name]['visible']) && $extra_fields[$field_name]['visible']) {
           $entity->content[$extra_field_name] = $entity->content[$field_name];
 
           // Remove unnecessary values from render array.
@@ -106,13 +106,13 @@ function field_split_entity_view($entity, $type, $view_mode, $langcode) {
             $entity->content[$extra_field_name][0] = $entity->content[$extra_field_name][$i];
             unset($entity->content[$extra_field_name][$i]);
           }
-        }
-      }
 
-      // Finally remove all unnecessary field values in the main field.
-      foreach (element_children($entity->content[$field_name]) as $key) {
-        if ($key != 0) {
-          unset($entity->content[$field_name][$key]);
+          // Finally remove all unnecessary field values in the main field.
+          foreach (element_children($entity->content[$field_name]) as $key) {
+            if ($key != 0) {
+              unset($entity->content[$field_name][$key]);
+            }
+          }
         }
       }
     }
