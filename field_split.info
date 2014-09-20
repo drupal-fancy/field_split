@@ -1,3 +1,4 @@
 name = Field Split
 description = Allows you to split a field value into multiple fields.
 core = 7.x
+configure = admin/structure/field-split
