@@ -76,7 +76,7 @@ function field_split_entity_view($entity, $type, $view_mode, $langcode) {
   // Iterate all fields inside the bundle.
   foreach ($field_split_settings as $field_name => $split_settings) {
     // If the main field is not available in this entity, continue,
-    if (!isset($entity->{$field_name}) || (isset($entity->{$field_name}) && !count($entity->{$field_name}))) {
+    if (!isset($entity->{$field_name}) || (isset($entity->{$field_name}) && !count($entity->{$field_name})) || !isset($entity->content[$field_name])) {
       continue;
     }
 
