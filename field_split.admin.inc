@@ -12,11 +12,11 @@ function field_split_config_form($form, $form_state) {
   $form['#tree'] = TRUE;
   $form['#attached']['css'][] = drupal_get_path('module', 'field_split') . '/css/field-split.css';
   $field_info = field_info_fields();
-  $settings = variable_get('field_split_config', array());
 
   foreach ($field_info as $field) {
     foreach ($field['bundles'] as $entity_type => $bundles) {
       foreach ($bundles as $bundle) {
+        $settings = variable_get('field_split_config_' . $entity_type . '__' . $bundle, array());
         // Field split can be only available for fields w/ more than one value.
         if ($field['cardinality'] == 1) {
           continue;
@@ -56,17 +56,21 @@ function field_split_config_form($form, $form_state) {
           );
         }
 
+        if (isset($settings[$field['field_name']]['enable']) && $settings[$field['field_name']]['enable']) {
+          $form['entity_types'][$entity_type][$bundle]['#collapsed'] = FALSE;
+        }
+
         $form['entity_types'][$entity_type][$bundle][$field['field_name']]['enable'] = array(
           '#title' => t('Split %field (@machine-name)', array('%field' => $label, '@machine-name' => $field['field_name'])),
           '#type' => 'checkbox',
-          '#default_value' => $settings[$entity_type][$bundle][$field['field_name']]['enable'],
+          '#default_value' => isset($settings[$field['field_name']]['enable']) ? $settings[$field['field_name']]['enable'] : FALSE,
         );
 
         $form['entity_types'][$entity_type][$bundle][$field['field_name']]['values'] = array(
           '#title' => t('Values'),
           '#type' => 'select',
           '#options' => $options,
-          '#default_value' => $settings[$entity_type][$bundle][$field['field_name']]['values'],
+          '#default_value' => isset($settings[$field['field_name']]['values']) ? $settings[$field['field_name']]['values'] : NULL,
           '#description' => t('Select the amount of fields in total.'),
           '#states' => array(
             'visible' => array(
@@ -94,7 +98,12 @@ function field_split_config_form($form, $form_state) {
  * Submit function for configuration form.
  */
 function field_split_config_form_submit($form, &$form_state) {
-  variable_set('field_split_config', $form_state['values']['entity_types']);
+  foreach ($form_state['values']['entity_types'] as $entity_type => $bundles) {
+    foreach ($bundles as $bundle_name => $bundle) {
+      variable_set('field_split_config_' . $entity_type . '__' . $bundle_name, $form_state['values']['entity_types'][$entity_type][$bundle_name]);
+    }
+  }
+
   field_cache_clear();
 
   drupal_set_message(t('The configuration options have been saved.'));

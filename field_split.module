@@ -69,16 +69,11 @@ function field_split_field_extra_fields() {
  */
 function field_split_entity_view($entity, $type, $view_mode, $langcode) {
   list(, , $bundle) = entity_extract_ids($type, $entity);
-  $field_split_settings = variable_get('field_split_config', array());
+  $field_split_settings = variable_get('field_split_config_' . $type . '__' . $bundle, array());
   $extra_fields = field_extra_fields_get_display($type, $bundle, $view_mode);
 
-  // Skip this entity if there are no field split settings.
-  if (!isset($field_split_settings[$type][$bundle])) {
-    return;
-  }
-
   // Iterate all fields inside the bundle.
-  foreach ($field_split_settings[$type][$bundle] as $field_name => $split_settings) {
+  foreach ($field_split_settings as $field_name => $split_settings) {
     // If the main field is not available in this entity, continue,
     if (!isset($entity->{$field_name}) || (isset($entity->{$field_name}) && !count($entity->{$field_name}))) {
       continue;

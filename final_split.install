@@ -9,5 +9,6 @@
  * Implements hook_uninstall().
  */
 function field_split_uninstall() {
-  variable_del('field_split_config');
+  db_query("DELETE FROM {field_split_config} WHERE name LIKE 'field_split_config_%'");
+  cache_clear_all('variables', 'cache');
 }
