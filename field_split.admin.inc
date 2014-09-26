@@ -100,11 +100,27 @@ function field_split_config_form($form, $form_state) {
 function field_split_config_form_submit($form, &$form_state) {
   foreach ($form_state['values']['entity_types'] as $entity_type => $bundles) {
     foreach ($bundles as $bundle_name => $bundle) {
-      variable_set('field_split_config_' . $entity_type . '__' . $bundle_name, $form_state['values']['entity_types'][$entity_type][$bundle_name]);
+      $var = 'field_split_config_' . $entity_type . '__' . $bundle_name;
+      $enabled = FALSE;
+
+      // Check whether Field Split is enabled.
+      foreach ($bundle as $field) {
+        if ($field['enable']) {
+          $enabled = TRUE;
+          break;
+        }
+      }
+
+      // Store variable if bundle is enabled for field splitting otherwise
+      // delete that variable.
+      if ($enabled) {
+        variable_set($var, $bundle);
+      }
+      else {
+        variable_del($var, 'field_split_config_' . $entity_type . '__' . $bundle_name);
+      }
     }
   }
-
-  field_cache_clear();
 
   drupal_set_message(t('The configuration options have been saved.'));
 }
