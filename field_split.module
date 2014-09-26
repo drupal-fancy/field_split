@@ -91,7 +91,7 @@ function field_split_entity_view($entity, $type, $view_mode, $langcode) {
           $entity->content[$extra_field_name] = $entity->content[$field_name];
 
           // Remove unnecessary values from render array.
-          foreach(element_children($entity->content[$extra_field_name]) as $key) {
+          foreach (element_children($entity->content[$extra_field_name]) as $key) {
             if ($key != $i) {
               unset($entity->content[$extra_field_name][$key]);
             }
