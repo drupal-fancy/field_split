@@ -39,12 +39,13 @@ function field_split_menu() {
  */
 function field_split_field_extra_fields() {
   $extra = array();
-  $settings = variable_get('field_split_config', array());
+  $entity_info = entity_get_info();
 
   // Iterate all settings and create extra fields.
-  foreach ($settings as $entity_type => $bundles) {
-    foreach ($bundles as $bundle => $fields) {
-      foreach ($fields as $field_name => $field_settings) {
+  foreach ($entity_info as $entity_type => $info) {
+    foreach ($info['bundles'] as $bundle => $fields) {
+      $settings = variable_get('field_split_config_' . $entity_type . '__' . $bundle, array());
+      foreach ($settings as $field_name => $field_settings) {
         if ($field_settings['enable']) {
           $field_info = field_info_instance($entity_type, $field_name, $bundle);
           $field_label = $field_info['label'];
