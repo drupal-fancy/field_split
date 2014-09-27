@@ -12,6 +12,7 @@ function field_split_config_form($form, $form_state) {
   $form['#tree'] = TRUE;
   $form['#attached']['css'][] = drupal_get_path('module', 'field_split') . '/css/field-split.css';
   $field_info = field_info_fields();
+  $entity_info = entity_get_info();
 
   foreach ($field_info as $field) {
     foreach ($field['bundles'] as $entity_type => $bundles) {
@@ -43,14 +44,14 @@ function field_split_config_form($form, $form_state) {
         if (!isset($form['entity_types'][$entity_type])) {
           $form['entity_types'][$entity_type] = array(
             '#type' => 'fieldset',
-            '#title' => $entity_type,
+            '#title' => $entity_info[$entity_type]['label'],
           );
         }
 
         if (!isset($form['entity_types'][$entity_type][$bundle])) {
           $form['entity_types'][$entity_type][$bundle] = array(
             '#type' => 'fieldset',
-            '#title' => $bundle,
+            '#title' => $entity_info[$entity_type]['bundles'][$bundle]['label'],
             '#collapsible' => TRUE,
             '#collapsed' => TRUE,
           );
