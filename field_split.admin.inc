@@ -92,6 +92,10 @@ function field_split_config_form($form, $form_state) {
     '#value' => t('Submit'),
   );
 
+  if (!isset($form['entity_types'])) {
+    $form['actions']['submit']['#disabled'] = TRUE;
+  }
+
   return $form;
 }
 
@@ -99,6 +103,10 @@ function field_split_config_form($form, $form_state) {
  * Submit function for configuration form.
  */
 function field_split_config_form_submit($form, &$form_state) {
+  if (!isset($form_state['values']['entity_types'])) {
+    return;
+  }
+
   foreach ($form_state['values']['entity_types'] as $entity_type => $bundles) {
     foreach ($bundles as $bundle_name => $bundle) {
       $var = 'field_split_config_' . $entity_type . '__' . $bundle_name;
