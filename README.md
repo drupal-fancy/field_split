@@ -11,7 +11,11 @@ Current Maintainers:
 
 * [yannickoo](http://drupal.org/user/531118)
 
-This module can split field values into multiple fields on the Manage display page. Imagine you have an entity reference field with two values and the first one should goes into region "Left" and the other one goes into region* "Right". Currently you only have one field which you can move into a region but with this module you can split that field so that you have 2 fields.
+This module can split field values into multiple fields on the Manage display
+page. Imagine you have an entity reference field with two values and the first
+one should goes into region "Left" and the other one goes into region "Right".
+Currently you only have one field which you can move into a region but with this
+module you can split that field so that you have 2 fields.
 
 INSTALLATION
 ------------
