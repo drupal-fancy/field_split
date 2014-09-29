@@ -69,11 +69,10 @@ function field_split_config_form($form, $form_state) {
         );
 
         $form['entity_types'][$entity_type][$bundle][$field['field_name']]['values'] = array(
-          '#title' => t('Values'),
+          '#title' => t('Amount of total fields'),
           '#type' => 'select',
           '#options' => $options,
           '#default_value' => isset($settings[$field['field_name']]['values']) ? $settings[$field['field_name']]['values'] : NULL,
-          '#description' => t('Select the amount of fields in total.'),
           '#states' => array(
             'visible' => array(
               'input[name$="entity_types[' . $entity_type . '][' . $bundle . '][' . $field['field_name'] . '][enable]"]' => array('checked' => TRUE),
