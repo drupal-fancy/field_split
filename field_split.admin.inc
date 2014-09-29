@@ -30,7 +30,7 @@ function field_split_config_form($form, $form_state) {
         $options = array();
 
         // Build a list with available values.
-        foreach(range(2, $total_fields) as $number) {
+        foreach (range(2, $total_fields) as $number) {
           $options[$number] = $number;
         }
 
