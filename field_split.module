@@ -15,7 +15,6 @@ function field_split_help($path, $arg) {
   }
 }
 
-
 /**
  * Implements hook_menu().
  */

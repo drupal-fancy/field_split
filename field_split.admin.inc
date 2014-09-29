@@ -18,6 +18,7 @@ function field_split_config_form($form, $form_state) {
     foreach ($field['bundles'] as $entity_type => $bundles) {
       foreach ($bundles as $bundle) {
         $settings = variable_get('field_split_config_' . $entity_type . '__' . $bundle, array());
+
         // Field split can be only available for fields w/ more than one value.
         if ($field['cardinality'] == 1) {
           continue;
