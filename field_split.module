@@ -97,7 +97,7 @@ function field_split_entity_view($entity, $type, $view_mode, $langcode) {
           }
 
           // Move field value to '0' key.
-          if ($i != 0) {
+          if ($i != 0 && isset($entity->content[$field_name][$i])) {
             $entity->content[$extra_field_name][0] = $entity->content[$field_name][$i];
             unset($entity->content[$field_name][$i]);
           }
