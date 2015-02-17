@@ -1,7 +1,10 @@
 <?php
 
-use Drupal\Field\Entity\FieldConfig;
+use Drupal\Core\Entity\EntityInterface;
+use Drupal\Core\Entity\Display\EntityViewDisplayInterface;
+use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Render\Element;
+use Drupal\Field\Entity\FieldConfig;
 
 /**
  * @file
@@ -141,8 +144,7 @@ function field_split_entity_extra_field_info() {
 /**
  * Implements hook_entity_view().
  */
-function field_split_entity_view(array &$build, \Drupal\Core\Entity\EntityInterface $entity, \Drupal\Core\Entity\Display\EntityViewDisplayInterface $display, $view_mode, $langcode) {
-
+function field_split_entity_view(array &$build, EntityInterface $entity, EntityViewDisplayInterface $display, $view_mode, $langcode) {
   // Load all fields assigned to the entity with field_split enabled.
   $storage = \Drupal::entityManager()->getStorage('field_config');
   $field_ids = Drupal::entityQuery('field_config')
