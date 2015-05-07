@@ -131,5 +131,8 @@ function field_split_config_form_submit($form, &$form_state) {
     }
   }
 
+  // Clear field info cache in order to show new extra fields.
+  field_info_cache_clear();
+
   drupal_set_message(t('The configuration options have been saved.'));
 }
